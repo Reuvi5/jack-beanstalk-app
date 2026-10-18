@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jack and the Beanstalk — Cartoon Me</title>
+  <style>
+    :root { --green: #2f7d32; --bg: #f6f8f2; --card: #fff; --text: #1f2a1f; --muted: #5d6b5d; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, sans-serif; background: var(--bg); color: var(--text); }
+    main { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { margin: 0 0 4px; color: var(--green); }
+    .sub { color: var(--muted); margin: 0 0 24px; }
+    form, .result { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 16px 0; }
+    label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+    select, input[type=file] { width: 100%; padding: 8px; border: 1px solid #ccd5cc; border-radius: 8px; font-size: 15px; background: #fff; }
+    fieldset { border: 1px solid #ccd5cc; border-radius: 8px; padding: 12px; margin: 0 0 16px; }
+    legend { font-weight: 600; font-size: 14px; padding: 0 6px; }
+    fieldset label { font-weight: 400; display: flex; gap: 8px; align-items: center; margin: 6px 0; }
+    button { background: var(--green); color: #fff; border: 0; border-radius: 8px; padding: 12px 20px; font-size: 16px; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .hint { color: var(--muted); font-size: 13px; margin-top: 6px; }
+    .error { background: #fde8e8; color: #8a1c1c; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+    .result { margin-top: 24px; }
+    .pair { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; align-items: start; }
+    @media (max-width: 640px) { .pair { grid-template-columns: 1fr; } }
+    figure { margin: 0; }
+    figure img { width: 100%; border-radius: 8px; display: block; }
+    figcaption { margin-top: 8px; font-size: 15px; line-height: 1.4; }
+    .small figcaption { color: var(--muted); font-size: 13px; }
+    footer { color: var(--muted); font-size: 12px; margin-top: 24px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Cartoon Me: Jack and the Beanstalk</h1>
+  <p class="sub">Upload a photo, choose a cartoon style and a scene, and become Jack.</p>
+
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+  <form action="/generate" method="post" enctype="multipart/form-data" id="form">
+    <label for="photo">Your photo</label>
+    <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp,image/heic,.heic">
+    {% if photo_b64 %}
+      <input type="hidden" name="photo_b64" value="{{ photo_b64 }}">
+      <p class="hint">Leave empty to reuse the photo shown below (handy for making the other scene).</p>
+    {% else %}
+      <p class="hint">A clear, front-facing photo with good light works best.</p>
+    {% endif %}
+
+    <div class="grid">
+      <div>
+        <label for="style">Cartoon style</label>
+        <select id="style" name="style">
+          {% for key, text in styles.items() %}<option value="{{ key }}" {% if settings.style == key %}selected{% endif %}>{{ text | capitalize }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="lines">Outlines</label>
+        <select id="lines" name="lines">
+          {% for key, text in lines.items() %}<option value="{{ key }}" {% if settings.lines == key %}selected{% endif %}>{{ text | capitalize }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="palette">Colors</label>
+        <select id="palette" name="palette">
+          {% for key, text in palettes.items() %}<option value="{{ key }}" {% if settings.palette == key %}selected{% endif %}>{{ text | capitalize }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="exaggeration">Exaggeration</label>
+        <select id="exaggeration" name="exaggeration">
+          {% for key in exaggeration.keys() %}<option value="{{ key }}" {% if settings.exaggeration == key %}selected{% endif %}>{{ key | capitalize }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <fieldset>
+      <legend>Scene</legend>
+      {% for key, scene in scenes.items() %}
+        <label><input type="radio" name="scene" value="{{ key }}" {% if settings.scene == key %}checked{% endif %}> {{ scene.label }}</label>
+      {% endfor %}
+    </fieldset>
+
+    <button type="submit" id="go">Make my cartoon</button>
+    <p class="hint">Takes about 20–60 seconds. One image per click.</p>
+  </form>
+
+  {% if output_b64 %}
+  <section class="result">
+    <div class="pair">
+      <figure class="small">
+        <img src="data:image/jpeg;base64,{{ photo_b64 }}" alt="Uploaded photo">
+        <figcaption>Uploaded photo</figcaption>
+      </figure>
+      <figure>
+        <img src="data:image/png;base64,{{ output_b64 }}" alt="{{ caption }}">
+        <figcaption><strong>Scene:</strong> {{ caption }}</figcaption>
+      </figure>
+    </div>
+  </section>
+  {% elif photo_b64 %}
+  <section class="result small">
+    <figure style="max-width:240px"><img src="data:image/jpeg;base64,{{ photo_b64 }}" alt="Uploaded photo"><figcaption>Uploaded photo</figcaption></figure>
+  </section>
+  {% endif %}
+
+  <footer>Model: {{ model }} · quality: {{ quality }}</footer>
+</main>
+<script>
+  // Disable the button after one click so a double-click can't fire two paid API calls.
+  document.getElementById('form').addEventListener('submit', () => {
+    const b = document.getElementById('go');
+    b.disabled = true;
+    b.textContent = 'Drawing… (up to a minute)';
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# Secrets — never commit these
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Test photos (don't commit other people's faces)
+test_photos/
+outputs/
+.DS_Store
