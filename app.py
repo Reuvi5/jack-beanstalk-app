@@ -42,6 +42,9 @@ QUALITY = os.environ.get("IMAGE_QUALITY", "low")  # low | medium | high
 SCENES = {
     "planting": {
         "label": "1. Jack is planting the seeds",
+        "story": "Jack and the Beanstalk",
+        "character": "Jack",
+        "outfit": "simple fairy-tale peasant clothes",
         "spec": (
             "Jack is planting the seeds: he kneels in the freshly dug soil of a "
             "small garden beside a thatched-roof cottage, pressing a handful of "
@@ -50,18 +53,25 @@ SCENES = {
     },
     "climbing": {
         "label": "2. Jack is climbing the beanstalk",
+        "story": "Jack and the Beanstalk",
+        "character": "Jack",
+        "outfit": "simple fairy-tale peasant clothes",
         "spec": (
             "Jack is climbing the beanstalk: he grips an enormous, twisting green "
             "beanstalk with both hands and feet, partway up, surrounded by giant "
             "leaves, with his tiny cottage far below and clouds above him."
         ),
     },
-    "chocolate": {
-        "label": "3. Charlie is covering his face with chocolate",
+    "charlie": {
+        "label": "3. Charlie in the chocolate factory",
+        "story": "Charlie and the Chocolate Factory",
+        "character": "Charlie",
+        "outfit": "a worn knitted sweater and patched trousers",
         "spec": (
-            "Charlie is covering his face with chocolate: he is sitting at a table, "
-            "surrounded by a pile of chocolate bars, with his face hidden behind the "
-            "treats."
+            "Charlie in the chocolate factory: he stands beside a flowing river of "
+            "melted chocolate in a huge candy room full of giant lollipops and "
+            "candy trees, grinning, with smears of melted chocolate around his "
+            "mouth and on both cheeks."
         ),
     },
 }
@@ -96,17 +106,16 @@ DEFAULTS = {"style": "classic", "lines": "medium", "palette": "vibrant", "exagge
 
 
 def build_prompt(settings: dict) -> str:
-    scene = SCENES[settings["scene"]]["spec"]
-    return f"""Turn the person in the attached photo into a {STYLES[settings['style']]} and place them in a storybook illustration from the fairy tale "Jack and the Beanstalk". This person is Jack.
+    scene = SCENES[settings["scene"]]
+    return f"""Turn the person in the attached photo into a {STYLES[settings['style']]} and place them in a storybook illustration from "{scene['story']}". This person is {scene['character']}. Show only elements from "{scene['story']}"; do not mix in elements from any other story.
 
 IDENTITY (most important): The cartoon must be instantly recognizable as this exact person. Preserve their face shape, eye shape and color, eyebrows, nose, mouth, smile, skin tone, hairstyle, hair color and length, facial hair, glasses, and any distinctive marks. Stylize, but do not change who they are, their apparent age, or their ethnicity. {EXAGGERATION[settings['exaggeration']]}
 
-STYLE: {STYLES[settings['style']]}, {LINES[settings['lines']]}, {PALETTES[settings['palette']]}. Dress Jack in simple fairy-tale peasant clothes.
+STYLE: {STYLES[settings['style']]}, {LINES[settings['lines']]}, {PALETTES[settings['palette']]}. Dress {scene['character']} in {scene['outfit']}.
 
-SCENE (must be depicted exactly): {scene}
+SCENE (must be depicted exactly, including every listed detail): {scene['spec']}
 
-Keep Jack's face clearly visible, turned mostly toward the viewer, and large enough to recognize. Do not put any text, captions, or speech bubbles in the image."""
-
+Keep the face clearly visible, turned mostly toward the viewer, and large enough to recognize. Do not put any text, captions, or speech bubbles in the image."""
 
 def prepare_photo(raw: bytes) -> bytes:
     """Fix phone rotation, shrink to max 1024px, re-encode as JPEG (cheaper input)."""
